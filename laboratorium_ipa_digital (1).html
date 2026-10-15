@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratorium IPA Digital - Konduktor & Isolator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Nunito', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#1E40AF', // Blue 800
+                        secondary: '#3B82F6', // Blue 500
+                        accent: '#F97316', // Orange 500
+                        light: '#F0F9FF', // Sky 50
+                    },
+                    animation: {
+                        'breathe': 'breathe 8s ease-in-out infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'heat-travel': 'heatTravel 5s linear forwards',
+                    },
+                    keyframes: {
+                        breathe: {
+                            '0%, 100%': { transform: 'scale(1)', opacity: '0.5' },
+                            '50%': { transform: 'scale(1.5)', opacity: '1' },
+                        },
+                        heatTravel: {
+                            '0%': { width: '0%' },
+                            '100%': { width: '100%' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .glass-panel { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); }
+        .section-container { display: none; animation: fadeIn 0.5s ease-in; }
+        .section-container.active { display: block; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Print Styles for LKPD */
+        @media print {
+            body { background: white; color: black; }
+            nav, .no-print, button, #sidebar { display: none !important; }
+            #section-lkpd { display: block !important; width: 100%; margin: 0; padding: 0; box-shadow: none; }
+            .print-border { border: 1px solid #000; }
+            input, textarea, select { border: none; border-bottom: 1px solid #000; appearance: none; -moz-appearance: none; -webkit-appearance: none; resize: none; overflow: hidden; background: transparent; }
+        }
+
+        /* Toast Notification */
+        #toast {
+            visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center;
+            border-radius: 8px; padding: 16px; position: fixed; z-index: 50; left: 50%; bottom: 30px;
+            transform: translateX(-50%); font-size: 17px;
+        }
+        #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+        @keyframes fadein { from { bottom: 0; opacity: 0; } to { bottom: 30px; opacity: 1; } }
+        @keyframes fadeout { from { bottom: 30px; opacity: 1; } to { bottom: 0; opacity: 0; } }
+    </style>
+</head>
+<body class="bg-light text-gray-800 font-sans antialiased min-h-screen flex flex-col md:flex-row">
+
+    <!-- Sidebar Navigation (Desktop) / Topbar (Mobile) -->
+    <nav id="sidebar" class="bg-primary text-white w-full md:w-64 md:fixed md:h-screen shadow-xl z-40 transition-all flex flex-col no-print">
+        <div class="p-4 flex items-center justify-between md:justify-center border-b border-blue-700">
+            <h1 class="font-heading font-bold text-xl flex items-center gap-2">
+                <i class="fa-solid fa-flask text-accent"></i> Lab Digital
+            </h1>
+            <button id="mobile-menu-btn" class="md:hidden text-white focus:outline-none">
+                <i class="fa-solid fa-bars text-2xl"></i>
+            </button>
+        </div>
+        
+        <div id="nav-links" class="hidden md:flex flex-col flex-1 overflow-y-auto py-4 space-y-1">
+            <div class="px-4 text-xs font-semibold text-blue-300 uppercase mb-2">Alur Belajar</div>
+            <a href="#" onclick="navTo('home')" class="nav-btn active px-4 py-3 flex items-center gap-3 hover:bg-blue-800 border-l-4 border-transparent transition-all"><i class="fa-solid fa-house w-5"></i> Beranda</a>
+            <a href="#" onclick="navTo('tujuan')" class="nav-btn px-4 py-3 flex items-center gap-3 hover:bg-blue-800 border-l-4 border-transparent transition-all"><i class="fa-solid fa-bullseye w-5"></i> Tujuan</a>
+            
+            <div class="px-4 text-xs font-semibold text-blue-300 uppercase mt-4 mb-2">1. Memahami</div>
+            <a href="#" onclick="navTo('stimulasi')" class="nav-btn px-4 py-3 flex items-center gap-3 hover:bg-blue-800 border-l-4 border-transparent transition-all"><i class="fa-solid fa-lightbulb w-5"></i> Identifikasi Masalah</a>
+            <a href="#" onclick="navTo('materi')" class="nav-btn px-4 py-3 flex items-center gap-3 hover:bg-blue-800 border-l-4 border-transparent transition-all"><i class="fa-solid fa-book-open w-5"></i> Konsep Materi</a>
+            
+            <div class="px-4 text-xs font-semibold text-blue-300 uppercase mt-4 mb-2">2. Mengaplikasi</div>
+            <a href="#" onclick="navTo('praktikum')" class="nav-btn px-4 py-3 flex items-center gap-3 hover:bg-blue-800 border-l-4 border-transparent transition-all"><i class="fa-solid fa-vial w-5"></i> Praktikum & Simulasi</a>
+            <a href="#" onclick="navTo('lkpd')" class="nav-btn px-4 py-3 flex items-center gap-3 hover:bg-blue-800 border-l-4 border-transparent transition-all"><i class="fa-solid fa-clipboard-list w-5"></i> LKPD</a>
+            <a href="#" onclick="navTo('verifikasi')" class="nav-btn px-4 py-3 flex items-center gap-3 hover:bg-blue-800 border-l-4 border-transparent transition-all"><i class="fa-solid fa-check-double w-5"></i> Verifikasi</a>
+            <a href="#" onclick="navTo('game')" class="nav-btn px-4 py-3 flex items-center gap-3 hover:bg-blue-800 border-l-4 border-transparent transition-all"><i class="fa-solid fa-gamepad w-5"></i> Game Detektif</a>
+            <a href="#" onclick="navTo('kuis')" class="nav-btn px-4 py-3 flex items-center gap-3 hover:bg-blue-800 border-l-4 border-transparent transition-all"><i class="fa-solid fa-pen-to-square w-5"></i> Kuis Evaluasi</a>
+            
+            <div class="px-4 text-xs font-semibold text-blue-300 uppercase mt-4 mb-2">3. Merefleksi</div>
+            <a href="#" onclick="navTo('refleksi')" class="nav-btn px-4 py-3 flex items-center gap-3 hover:bg-blue-800 border-l-4 border-transparent transition-all"><i class="fa-solid fa-brain w-5"></i> AHA Moment</a>
+            <a href="#" onclick="navTo('rekap')" class="nav-btn px-4 py-3 flex items-center gap-3 hover:bg-blue-800 border-l-4 border-transparent transition-all"><i class="fa-solid fa-paper-plane w-5"></i> Kirim Hasil</a>
+        </div>
+
+        <div class="p-4 border-t border-blue-700 hidden md:block">
+            <div class="text-xs text-blue-300 mb-1">Progress Belajar</div>
+            <div class="w-full bg-blue-900 rounded-full h-2.5">
+                <div id="progress-bar" class="bg-accent h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+            <div id="progress-text" class="text-xs text-right mt-1 font-bold">0%</div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 md:ml-64 p-4 md:p-8 w-full max-w-5xl mx-auto overflow-x-hidden min-h-screen relative">
+        
+        <!-- Header Profil (shows when logged in) -->
+        <div id="user-badge" class="hidden glass-panel rounded-full px-4 py-2 flex items-center gap-3 shadow-md w-max ml-auto mb-6 border border-blue-100 no-print">
+            <div class="bg-secondary text-white w-8 h-8 rounded-full flex items-center justify-center font-bold" id="badge-initial">A</div>
+            <div class="text-sm">
+                <p class="font-bold text-gray-800" id="badge-name">Siswa</p>
+                <p class="text-xs text-gray-500" id="badge-class">Kelas VII</p>
+            </div>
+            <button onclick="logout()" class="ml-2 text-gray-400 hover:text-red-500" title="Keluar/Ganti Akun"><i class="fa-solid fa-sign-out-alt"></i></button>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SECTION 0: HOME & IDENTITY -->
+        <!-- ========================================== -->
+        <section id="section-home" class="section-container active space-y-6">
+            <div class="text-center space-y-4 mb-8">
+                <div class="inline-block bg-orange-100 text-accent px-4 py-1 rounded-full font-semibold text-sm mb-2 shadow-sm border border-orange-200">
+                    SMP Negeri 58 Palembang
+                </div>
+                <h1 class="text-4xl md:text-5xl font-heading font-extrabold text-primary leading-tight">
+                    LABORATORIUM IPA DIGITAL
+                </h1>
+                <h2 class="text-2xl md:text-3xl font-heading font-bold text-gray-700">
+                    Petualangan Menemukan <span class="text-secondary">Konduktor</span> dan <span class="text-accent">Isolator</span>
+                </h2>
+                <p class="text-gray-600 font-medium">Guru Pengampu: Herdi, S.Pd., Gr.</p>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-blue-50">
+                <div class="md:flex">
+                    <div class="md:w-1/2 p-8 bg-gradient-to-br from-blue-50 to-blue-100 flex flex-col justify-center items-center text-center">
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQmz0NsfKDCPYEktqYA7_ne6NX4NQf2tsVoFCt9JCHx5ylUdD7ymdWmQN6w&s=10" 
+                             alt="Ilustrasi alat dapur dan bahan konduktor isolator" 
+                             class="rounded-xl shadow-md w-full max-w-sm object-cover mb-6 border-4 border-white"
+                             onerror="this.src='https://placehold.co/400x300/1E40AF/FFFFFF?text=Ilustrasi+Alat+Dapur'">
+                        <p class="text-sm text-gray-600">Mari belajar mengenali sifat bahan di sekitar kita secara menyenangkan!</p>
+                    </div>
+                    
+                    <div class="md:w-1/2 p-8">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-id-card text-secondary"></i> Isi Identitasmu Dulu Yuk!
+                        </h3>
+                        <form id="form-identitas" class="space-y-4" onsubmit="event.preventDefault(); startLearning();">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Nama Lengkap</label>
+                                <input type="text" id="input-nama" required placeholder="Contoh: Budi Santoso" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-secondary focus:border-secondary outline-none transition-all">
+                            </div>
+                            <div class="flex gap-4">
+                                <div class="w-1/2">
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1">Kelas</label>
+                                    <input type="text" id="input-kelas" required placeholder="Contoh: VII A" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-secondary outline-none">
+                                </div>
+                                <div class="w-1/2">
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1">No Absen</label>
+                                    <input type="number" id="input-absen" required min="1" placeholder="Contoh: 12" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-secondary outline-none">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Tanggal Pembelajaran</label>
+                                <input type="date" id="input-tanggal" required class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-secondary outline-none">
+                            </div>
+                            <button type="submit" class="w-full bg-secondary hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 mt-4">
+                                Mulai Pembelajaran <i class="fa-solid fa-arrow-right ml-2"></i>
+                            </button>
+                        </form>
+                        <p class="text-xs text-gray-500 mt-4 text-center"><i class="fa-solid fa-info-circle"></i> Data disimpan sementara di browsermu selama pembelajaran.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 1: TUJUAN PEMBELAJARAN -->
+        <!-- ========================================== -->
+        <section id="section-tujuan" class="section-container">
+            <h2 class="text-3xl font-heading font-bold text-primary border-b-2 border-blue-200 pb-2 mb-6">Capaian & Tujuan Pembelajaran</h2>
+            
+            <div class="bg-white rounded-xl shadow-md p-6 mb-6 border-l-4 border-secondary">
+                <h3 class="font-bold text-gray-800 mb-2"><i class="fa-solid fa-flag-checkered text-secondary mr-2"></i> Capaian Pembelajaran (Fase D)</h3>
+                <p class="text-gray-700 leading-relaxed">Peserta didik mampu melakukan pengukuran terhadap aspek fisis yang mereka temui, memahami hubungan usaha dan energi, mengukur suhu yang diakibatkan oleh energi kalor, serta membedakan bahan isolator dan konduktor.</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6 mb-8">
+                <div class="bg-orange-50 rounded-xl shadow-md p-6 border border-orange-100">
+                    <h3 class="font-bold text-gray-800 mb-4"><i class="fa-solid fa-crosshairs text-accent mr-2"></i> Tujuan Hari Ini</h3>
+                    <ol class="list-decimal list-inside text-gray-700 space-y-2">
+                        <li>Melalui penyelidikan, siswa dapat membedakan bahan isolator dan konduktor dengan tepat.</li>
+                        <li>Melalui penyelidikan, siswa dapat mengelompokkan berbagai benda dalam kehidupan sehari-hari berdasarkan sifat konduktor dan isolator secara kritis.</li>
+                    </ol>
+                </div>
+                
+                <div class="bg-blue-50 rounded-xl shadow-md p-6 border border-blue-100">
+                    <h3 class="font-bold text-gray-800 mb-4"><i class="fa-solid fa-list-check text-primary mr-2"></i> Indikator Keberhasilan (Checklist)</h3>
+                    <p class="text-sm text-gray-600 mb-3">Centang jika kamu merasa sudah menguasainya di akhir pelajaran:</p>
+                    <div class="space-y-3" id="checklist-tujuan">
+                        <!-- Generated via JS -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-right">
+                <button onclick="navTo('stimulasi')" class="bg-secondary hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg shadow transition-all">Lanjut ke Identifikasi Masalah <i class="fa-solid fa-arrow-right ml-2"></i></button>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 2: STIMULASI & IDENTIFIKASI -->
+        <!-- ========================================== -->
+        <section id="section-stimulasi" class="section-container">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-xl">1</div>
+                <h2 class="text-3xl font-heading font-bold text-primary">Stimulasi & Identifikasi Masalah</h2>
+            </div>
+            
+            <!-- Mindful Breathing -->
+            <div class="bg-green-50 rounded-xl p-6 mb-8 border border-green-200 text-center relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-green-200"></div>
+                <h3 class="font-bold text-green-800 mb-2"><i class="fa-solid fa-wind"></i> Mari Fokus Sejenak (Mindful Breathing)</h3>
+                <p class="text-sm text-green-700 mb-6">Sebelum mulai, tarik napas dalam-dalam, tahan perlahan, lalu hembuskan. Ikuti animasi lingkaran di bawah ini sebanyak 3 kali agar pikiran lebih rileks.</p>
+                <div class="w-24 h-24 bg-green-400 rounded-full mx-auto animate-breathe flex items-center justify-center shadow-lg">
+                    <i class="fa-solid fa-lungs text-white text-3xl opacity-80"></i>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                <h3 class="text-xl font-bold mb-4">Perhatikan Gambar Berikut!</h3>
+                <div class="flex justify-center mb-6">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQmz0NsfKDCPYEktqYA7_ne6NX4NQf2tsVoFCt9JCHx5ylUdD7ymdWmQN6w&s=10" 
+                         alt="Panci logam dengan gagang kayu/plastik" 
+                         class="rounded-lg shadow-md max-w-full md:max-w-md"
+                         onerror="this.src='https://placehold.co/500x300/e2e8f0/475569?text=Gambar+Panci+Memasak'">
+                </div>
+                
+                <div class="space-y-6">
+                    <p class="font-semibold text-gray-700">Tuliskan dugaan (hipotesis) sementaramu untuk pertanyaan-pertanyaan ini:</p>
+                    
+                    <div class="space-y-4" id="form-stimulasi">
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <label class="block font-medium text-gray-800 mb-2">1. Mengapa badan panci biasanya terbuat dari logam?</label>
+                            <textarea id="q-stim-1" rows="2" class="w-full px-3 py-2 border rounded-md focus:ring-secondary focus:border-secondary" placeholder="Tulis dugaanmu di sini..."></textarea>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <label class="block font-medium text-gray-800 mb-2">2. Mengapa gagang panci dibuat dari kayu atau bahan plastik tahan panas?</label>
+                            <textarea id="q-stim-2" rows="2" class="w-full px-3 py-2 border rounded-md focus:ring-secondary focus:border-secondary" placeholder="Tulis dugaanmu di sini..."></textarea>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <label class="block font-medium text-gray-800 mb-2">3. Apa yang akan terjadi jika seluruh bagian panci dibuat dari logam?</label>
+                            <textarea id="q-stim-3" rows="2" class="w-full px-3 py-2 border rounded-md focus:ring-secondary focus:border-secondary" placeholder="Tulis dugaanmu di sini..."></textarea>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <label class="block font-medium text-gray-800 mb-2">4. Apakah semua benda dapat menghantarkan panas dengan kemampuan yang sama?</label>
+                            <textarea id="q-stim-4" rows="2" class="w-full px-3 py-2 border rounded-md focus:ring-secondary focus:border-secondary" placeholder="Tulis dugaanmu di sini..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-3 mt-4">
+                        <button onclick="saveStimulasi()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow transition-all"><i class="fa-solid fa-save mr-2"></i> Simpan Jawaban</button>
+                        <button onclick="showHint('stimulasi')" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg shadow transition-all"><i class="fa-solid fa-lightbulb mr-2"></i> Lihat Petunjuk</button>
+                        <button onclick="navTo('materi')" class="bg-secondary hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow transition-all ml-auto">Lanjut ke Penyelidikan <i class="fa-solid fa-arrow-right ml-2"></i></button>
+                    </div>
+                    <div id="hint-stimulasi" class="hidden mt-4 p-4 bg-yellow-50 border-l-4 border-yellow-500 text-yellow-800 rounded-md text-sm">
+                        <strong>Petunjuk:</strong> Pikirkan tentang panas api dari kompor. Bagian panci mana yang perlu terkena panas agar makanan matang? Bagian mana yang kita pegang agar tangan tidak kepanasan?
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 3: MEMAHAMI KONSEP -->
+        <!-- ========================================== -->
+        <section id="section-materi" class="section-container">
+             <div class="flex items-center gap-3 mb-6">
+                <div class="bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-xl"><i class="fa-solid fa-book-open"></i></div>
+                <h2 class="text-3xl font-heading font-bold text-primary">Memahami Konsep</h2>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6 mb-8">
+                <!-- Konduktor -->
+                <div class="bg-white rounded-xl shadow-md border-t-4 border-red-500 p-6">
+                    <h3 class="text-2xl font-bold text-red-600 mb-3 flex items-center gap-2"><i class="fa-solid fa-fire-flame-curved"></i> Konduktor</h3>
+                    <p class="text-gray-700 mb-4"><strong>Konduktor</strong> adalah bahan yang relatif mudah menghantarkan energi panas atau arus listrik.</p>
+                    <div class="bg-red-50 rounded-lg p-4">
+                        <p class="text-sm font-semibold text-red-800 mb-2">Contoh Bahan Konduktor:</p>
+                        <ul class="list-disc list-inside text-sm text-gray-700 grid grid-cols-2 gap-1">
+                            <li>Tembaga</li><li>Aluminium</li><li>Besi</li><li>Baja</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Isolator -->
+                <div class="bg-white rounded-xl shadow-md border-t-4 border-blue-500 p-6">
+                    <h3 class="text-2xl font-bold text-blue-600 mb-3 flex items-center gap-2"><i class="fa-solid fa-snowflake"></i> Isolator</h3>
+                    <p class="text-gray-700 mb-4"><strong>Isolator</strong> adalah bahan yang relatif sulit menghantarkan energi panas atau arus listrik dibandingkan konduktor pada kondisi yang sebanding.</p>
+                    <div class="bg-blue-50 rounded-lg p-4">
+                        <p class="text-sm font-semibold text-blue-800 mb-2">Contoh Bahan Isolator:</p>
+                        <ul class="list-disc list-inside text-sm text-gray-700 grid grid-cols-2 gap-1">
+                            <li>Kayu kering</li><li>Plastik tertentu</li><li>Karet</li><li>Udara terperangkap</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-8 text-sm text-yellow-800 rounded-r-lg">
+                <i class="fa-solid fa-triangle-exclamation mr-1"></i> <strong>Catatan Penting:</strong> Kemampuan menghantarkan panas dan listrik tidak selalu sama persis. Suatu bahan mungkin baik menghantarkan panas, tapi kurang baik menghantarkan listrik, dan sebaliknya. Sifat bahan juga bergantung pada jenis bahan, kondisi (suhu/kelembapan), dan penggunaannya.
+            </div>
+
+            <!-- Kartu Interaktif -->
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Klik Benda untuk Melihat Penjelasan!</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <!-- Generated by JS: objectCards -->
+                <div class="interactive-card cursor-pointer bg-white rounded-lg shadow p-4 text-center hover:bg-blue-50 border transition-all" onclick="showObjectInfo('panci')">
+                    <i class="fa-solid fa-kitchen-set text-3xl text-gray-500 mb-2"></i>
+                    <p class="font-semibold text-sm">Panci Logam</p>
+                </div>
+                <div class="interactive-card cursor-pointer bg-white rounded-lg shadow p-4 text-center hover:bg-blue-50 border transition-all" onclick="showObjectInfo('gagang')">
+                    <i class="fa-solid fa-grip text-3xl text-gray-500 mb-2"></i>
+                    <p class="font-semibold text-sm">Gagang Panci</p>
+                </div>
+                <div class="interactive-card cursor-pointer bg-white rounded-lg shadow p-4 text-center hover:bg-blue-50 border transition-all" onclick="showObjectInfo('kabel')">
+                    <i class="fa-solid fa-plug text-3xl text-gray-500 mb-2"></i>
+                    <p class="font-semibold text-sm">Kabel Listrik</p>
+                </div>
+                <div class="interactive-card cursor-pointer bg-white rounded-lg shadow p-4 text-center hover:bg-blue-50 border transition-all" onclick="showObjectInfo('sendok')">
+                    <i class="fa-solid fa-spoon text-3xl text-gray-500 mb-2"></i>
+                    <p class="font-semibold text-sm">Sendok Logam</p>
+                </div>
+            </div>
+            
+            <div id="object-info-box" class="hidden bg-white p-4 rounded-lg shadow-inner border border-blue-200 mb-8 transition-all">
+                <h4 id="obj-title" class="font-bold text-lg text-primary mb-1">Judul</h4>
+                <p id="obj-desc" class="text-gray-700 text-sm">Deskripsi</p>
+            </div>
+
+            <!-- Animasi Konsep -->
+            <div class="bg-gray-800 text-white rounded-xl p-6 mb-8 relative overflow-hidden">
+                <h3 class="text-xl font-bold mb-2 flex items-center gap-2"><i class="fa-solid fa-film"></i> Animasi: Lomba Rambat Panas</h3>
+                <p class="text-sm text-gray-300 mb-6">Perhatikan bagaimana panas dari api (kiri) merambat ke batang logam dan batang kayu pada kondisi yang sama.</p>
+                
+                <div class="space-y-6">
+                    <div class="flex items-center gap-4 relative">
+                        <div class="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center animate-pulse shadow-[0_0_15px_rgba(220,38,38,0.8)] z-10"><i class="fa-solid fa-fire text-yellow-300"></i></div>
+                        <div class="flex-1 h-6 bg-gray-400 rounded relative overflow-hidden">
+                            <div class="absolute inset-y-0 left-0 bg-gradient-to-r from-red-600 to-yellow-400 opacity-80" id="anim-metal" style="width: 0%;"></div>
+                        </div>
+                        <span class="w-20 text-right font-bold text-blue-300">Logam</span>
+                    </div>
+                    
+                    <div class="flex items-center gap-4 relative">
+                        <div class="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center animate-pulse shadow-[0_0_15px_rgba(220,38,38,0.8)] z-10"><i class="fa-solid fa-fire text-yellow-300"></i></div>
+                        <div class="flex-1 h-6 bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')] bg-[#8B5A2B] rounded relative overflow-hidden">
+                            <div class="absolute inset-y-0 left-0 bg-gradient-to-r from-red-600 to-yellow-400 opacity-60" id="anim-wood" style="width: 0%;"></div>
+                        </div>
+                        <span class="w-20 text-right font-bold text-orange-300">Kayu</span>
+                    </div>
+                </div>
+                
+                <div class="mt-6 flex gap-3 justify-center">
+                    <button onclick="playHeatAnimation()" class="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg font-bold"><i class="fa-solid fa-play mr-1"></i> Putar</button>
+                    <button onclick="pauseHeatAnimation()" class="bg-yellow-500 hover:bg-yellow-600 px-4 py-2 rounded-lg font-bold"><i class="fa-solid fa-pause mr-1"></i> Jeda</button>
+                    <button onclick="resetHeatAnimation()" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg font-bold"><i class="fa-solid fa-rotate-left mr-1"></i> Ulangi</button>
+                </div>
+            </div>
+
+            <!-- Cek Pemahaman Mini -->
+            <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100 mb-8">
+                <h3 class="text-xl font-bold mb-4">Cek Pemahaman Singkat</h3>
+                <div id="mini-quiz-container" class="space-y-4">
+                    <!-- Loaded via JS -->
+                </div>
+            </div>
+
+            <div class="text-right">
+                <button onclick="navTo('praktikum')" class="bg-secondary hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg shadow transition-all">Lanjut ke Praktikum <i class="fa-solid fa-arrow-right ml-2"></i></button>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 4: PRAKTIKUM & SIMULASI -->
+        <!-- ========================================== -->
+        <section id="section-praktikum" class="section-container">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-xl">2</div>
+                <h2 class="text-3xl font-heading font-bold text-primary">Praktikum Mandiri & Simulasi</h2>
+            </div>
+
+            <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-lg">
+                <h3 class="font-bold text-red-800 flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation"></i> PERINGATAN KESELAMATAN</h3>
+                <ul class="list-disc list-inside text-sm text-red-700 mt-2 space-y-1">
+                    <li>Dilarang memanaskan air sendiri tanpa pendampingan orang dewasa.</li>
+                    <li>Gunakan air panas secukupnya, <strong>bukan air mendidih</strong>.</li>
+                    <li>Jangan menyentuh air panas atau wadah kaca yang panas.</li>
+                    <li><strong>Jangan</strong> melakukan percobaan menggunakan listrik rumah tangga!</li>
+                    <li>Jika tidak ada pendampingan, <strong>WAJIB menggunakan Simulasi Virtual</strong>.</li>
+                </ul>
+            </div>
+
+            <!-- Toggle Mode -->
+            <div class="flex justify-center mb-8">
+                <div class="bg-gray-200 rounded-lg p-1 inline-flex">
+                    <button id="btn-mode-nyata" onclick="setPracticumMode('nyata')" class="px-6 py-2 rounded-md font-bold text-gray-700 bg-white shadow-sm transition-all">Praktikum Nyata</button>
+                    <button id="btn-mode-simulasi" onclick="setPracticumMode('simulasi')" class="px-6 py-2 rounded-md font-bold text-gray-500 hover:text-gray-700 transition-all">Simulasi Virtual</button>
+                </div>
+            </div>
+
+            <!-- Praktikum Nyata Content -->
+            <div id="content-nyata" class="bg-white rounded-xl shadow-md p-6 border border-gray-100 active-mode">
+                <h3 class="text-xl font-bold mb-4 text-primary">Langkah Kerja Praktikum Nyata</h3>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-bold text-gray-700 mb-2">Alat dan Bahan:</h4>
+                        <ul class="list-disc list-inside text-sm text-gray-600 mb-4 space-y-1">
+                            <li>Wadah kaca/gelas tahan panas (berisi air panas)</li>
+                            <li>Sendok logam</li><li>Penggaris plastik</li>
+                            <li>Sumpit kayu/bambu</li><li>Pensil kayu</li><li>Sendok plastik</li>
+                            <li>Margarin/mentega secukupnya</li>
+                        </ul>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <h4 class="font-bold text-gray-700 mb-2">Instruksi Interaktif:</h4>
+                        <p class="text-xs text-gray-500 mb-3">Centang langkah yang sudah kamu lakukan.</p>
+                        <div class="space-y-2 text-sm" id="steps-checklist">
+                            <label class="flex items-start gap-2 cursor-pointer hover:bg-blue-100 p-1 rounded"><input type="checkbox" class="mt-1 rounded text-secondary"> <span>1. Siapkan alat dan bahan dengan pendampingan orang dewasa.</span></label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:bg-blue-100 p-1 rounded"><input type="checkbox" class="mt-1 rounded text-secondary"> <span>2. Oleskan sedikit margarin pada salah satu ujung masing-masing benda.</span></label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:bg-blue-100 p-1 rounded"><input type="checkbox" class="mt-1 rounded text-secondary"> <span>3. Masukkan ujung benda yang <strong>tidak</strong> diolesi margarin ke dalam air panas.</span></label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:bg-blue-100 p-1 rounded"><input type="checkbox" class="mt-1 rounded text-secondary"> <span>4. Amati perubahan margarin tanpa menyentuh bagian yang panas.</span></label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:bg-blue-100 p-1 rounded"><input type="checkbox" class="mt-1 rounded text-secondary"> <span>5. Catat waktu di LKPD saat margarin mulai meleleh. (Batas 3 menit).</span></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Simulasi Virtual Content -->
+            <div id="content-simulasi" class="hidden bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                <h3 class="text-xl font-bold mb-2 text-accent flex items-center gap-2"><i class="fa-solid fa-laptop-code"></i> Laboratorium Virtual</h3>
+                <p class="text-sm text-gray-600 mb-6">Pilih bahan benda, lalu tekan tombol panaskan untuk melihat simulasi perpindahan panas.</p>
+                
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="md:w-1/3 space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div>
+                            <label class="block font-bold text-gray-700 mb-2">Pilih Benda Uji:</label>
+                            <select id="sim-material" class="w-full px-4 py-2 rounded border focus:ring-accent outline-none">
+                                <option value="logam">Sendok Logam (Besi/Aluminium)</option>
+                                <option value="plastik">Sendok Plastik</option>
+                                <option value="kayu">Sumpit Kayu</option>
+                            </select>
+                        </div>
+                        <button onclick="startSimulation()" id="btn-start-sim" class="w-full bg-accent hover:bg-orange-600 text-white font-bold py-2 px-4 rounded shadow transition-all"><i class="fa-solid fa-fire mr-2"></i> Mulai Panaskan</button>
+                        <button onclick="resetSimulation()" class="w-full bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded shadow transition-all"><i class="fa-solid fa-rotate-left mr-2"></i> Reset</button>
+                        
+                        <div class="mt-4 p-3 bg-white border rounded text-center">
+                            <span class="text-sm font-bold text-gray-500">Waktu Simulasi:</span>
+                            <div id="sim-timer" class="text-2xl font-mono font-bold text-gray-800">00:00</div>
+                        </div>
+                    </div>
+                    
+                    <div class="md:w-2/3 bg-blue-50 border border-blue-200 rounded-lg p-6 relative flex flex-col items-center justify-center min-h-[250px]">
+                        <!-- Canvas / DOM Simulation Area -->
+                        <div class="w-full max-w-sm relative">
+                            <!-- Gelas Air Panas -->
+                            <div class="absolute left-0 bottom-0 w-24 h-32 border-4 border-t-0 border-blue-300 rounded-b-lg bg-blue-100 opacity-80 z-10 flex items-end justify-center pb-2">
+                                <i class="fa-solid fa-temperature-arrow-up text-red-500 text-3xl animate-pulse" id="sim-heat-icon" style="display:none;"></i>
+                            </div>
+                            <div class="absolute left-0 bottom-0 w-24 h-24 bg-red-200 opacity-50 rounded-b z-0" id="sim-water" style="display:none;"></div>
+                            
+                            <!-- Benda Uji -->
+                            <div id="sim-object" class="absolute left-12 bottom-10 w-48 h-6 bg-gray-400 origin-left transform -rotate-12 rounded border border-gray-500 z-20 shadow-md overflow-hidden transition-colors duration-500">
+                                <!-- Lapisan panas merambat -->
+                                <div id="sim-heat-layer" class="h-full w-0 bg-red-500 opacity-70"></div>
+                            </div>
+                            
+                            <!-- Margarin -->
+                            <div id="sim-margarin" class="absolute z-30 w-6 h-6 bg-yellow-400 rounded-sm shadow-sm transition-all duration-[2000ms]" style="left: 190px; bottom: 50px;"></div>
+                        </div>
+                        
+                        <div id="sim-result" class="absolute top-4 right-4 bg-white p-3 rounded shadow-md text-sm font-bold border-l-4 border-accent hidden">
+                            <!-- Result text -->
+                        </div>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-400 mt-4 text-center">*Catatan: Ini adalah model simulasi sederhana. Waktu pada simulasi dipercepat dari aslinya.</p>
+            </div>
+
+            <div class="text-right mt-8">
+                <button onclick="navTo('lkpd')" class="bg-secondary hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg shadow transition-all">Isi Hasil di LKPD <i class="fa-solid fa-arrow-right ml-2"></i></button>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 5: LKPD DIGITAL -->
+        <!-- ========================================== -->
+        <section id="section-lkpd" class="section-container">
+             <div class="flex items-center gap-3 mb-6 no-print">
+                <div class="bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-xl"><i class="fa-solid fa-clipboard-list"></i></div>
+                <h2 class="text-3xl font-heading font-bold text-primary">Lembar Kerja Peserta Didik (LKPD)</h2>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6 border border-gray-200 print-border">
+                <div class="text-center mb-6 border-b-2 border-gray-800 pb-4">
+                    <h2 class="text-2xl font-bold uppercase">LKPD - Membedakan Bahan Konduktor & Isolator</h2>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mb-6 text-sm">
+                    <div><strong>Nama:</strong> <span id="lkpd-nama" class="border-b border-dotted border-gray-400 block h-6"></span></div>
+                    <div><strong>Kelas:</strong> <span id="lkpd-kelas" class="border-b border-dotted border-gray-400 block h-6"></span></div>
+                    <div><strong>No. Absen:</strong> <span id="lkpd-absen" class="border-b border-dotted border-gray-400 block h-6"></span></div>
+                    <div><strong>Tanggal:</strong> <span id="lkpd-tanggal" class="border-b border-dotted border-gray-400 block h-6"></span></div>
+                    <div class="col-span-2"><strong>Jenis Aktivitas:</strong> <span id="lkpd-jenis" class="font-semibold text-secondary">Praktikum Nyata / Simulasi</span></div>
+                </div>
+
+                <div class="mb-6 overflow-x-auto">
+                    <h4 class="font-bold mb-2">A. Tabel Pengamatan</h4>
+                    <table class="w-full border-collapse border border-gray-400 text-sm">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="border border-gray-400 p-2 w-10">No</th>
+                                <th class="border border-gray-400 p-2 w-40">Jenis Benda</th>
+                                <th class="border border-gray-400 p-2 w-32">Bahan Penyusun</th>
+                                <th class="border border-gray-400 p-2 w-24">Margarin Meleleh? (Ya/Tidak)</th>
+                                <th class="border border-gray-400 p-2 w-32">Waktu (Detik/Menit)</th>
+                                <th class="border border-gray-400 p-2 w-32">Sifat Bahan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lkpd-table-body">
+                            <!-- Rows generated by JS -->
+                        </tbody>
+                    </table>
+                    <div class="mt-2 space-x-2 no-print">
+                        <button onclick="addLkpdRow()" class="text-xs bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded"><i class="fa-solid fa-plus"></i> Tambah Baris</button>
+                    </div>
+                </div>
+
+                <div class="mb-6 space-y-4">
+                    <h4 class="font-bold">B. Pertanyaan Diskusi</h4>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">1. Benda manakah yang membuat margarin paling cepat meleleh? Mengapa?</label>
+                        <textarea id="lkpd-q1" rows="2" class="w-full border border-gray-400 rounded p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">2. Benda manakah yang membuat margarin tidak meleleh atau sangat lambat? Apa sifat bahannya?</label>
+                        <textarea id="lkpd-q2" rows="2" class="w-full border border-gray-400 rounded p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">3. Berdasarkan percobaan ini, apa yang dimaksud dengan konduktor dan isolator?</label>
+                        <textarea id="lkpd-q3" rows="2" class="w-full border border-gray-400 rounded p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">4. Sebutkan dua contoh pemanfaatan bahan konduktor dan isolator di rumah!</label>
+                        <textarea id="lkpd-q4" rows="2" class="w-full border border-gray-400 rounded p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"></textarea>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="font-bold mb-2">C. Kesimpulan</h4>
+                    <p class="text-sm text-gray-700 mb-1">Berdasarkan percobaan yang telah saya lakukan, saya menemukan bahwa...</p>
+                    <textarea id="lkpd-kesimpulan" rows="3" class="w-full border border-gray-400 rounded p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Tuliskan kesimpulanmu di sini..."></textarea>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-3 mt-6 justify-end no-print">
+                <button onclick="window.print()" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded shadow"><i class="fa-solid fa-print mr-2"></i> Cetak PDF</button>
+                <button onclick="saveLKPD()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded shadow"><i class="fa-solid fa-save mr-2"></i> Simpan LKPD</button>
+                <button onclick="navTo('verifikasi')" class="bg-secondary hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg shadow">Lanjut Verifikasi <i class="fa-solid fa-arrow-right ml-2"></i></button>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 6: PEMBUKTIAN / VERIFIKASI -->
+        <!-- ========================================== -->
+        <section id="section-verifikasi" class="section-container">
+            <h2 class="text-3xl font-heading font-bold text-primary mb-6">Pembuktian & Verifikasi</h2>
+            
+            <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100 mb-6">
+                <p class="text-gray-700 mb-4">Mari kita bandingkan hasil pengamatanmu dengan konsep sains sebenarnya.</p>
+                
+                <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-primary mb-6">
+                    <h4 class="font-bold text-primary mb-2">Konsep Ilmiah:</h4>
+                    <p class="text-sm text-gray-700">Dalam sains, perpindahan panas melalui zat padat tanpa disertai perpindahan partikel zatnya disebut <strong>Konduksi</strong>. Bahan yang sangat baik menghantarkan panas secara konduksi (seperti besi, baja, tembaga) disebut <strong>Konduktor</strong>. Sedangkan bahan yang menghambat rambatan panas (seperti kayu, plastik, karet) disebut <strong>Isolator</strong>.</p>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block font-medium text-gray-800 mb-1">1. Apakah hasil pengamatanmu sesuai dengan dugaan awalmu (hipotesis)? Jelaskan!</label>
+                        <textarea id="verif-q1" rows="2" class="w-full border rounded p-2 focus:ring-1 focus:ring-blue-500"></textarea>
+                    </div>
+                    <div>
+                        <label class="block font-medium text-gray-800 mb-1">2. Mengapa waktu melelehnya margarin bisa berbeda pada setiap benda? Faktor apa saja yang mungkin memengaruhinya?</label>
+                        <textarea id="verif-q2" rows="2" class="w-full border rounded p-2 focus:ring-1 focus:ring-blue-500" placeholder="Petunjuk: Pikirkan tentang jenis bahan, ketebalan, suhu air..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-right mt-6">
+                <button onclick="navTo('game')" class="bg-secondary hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg shadow">Saya Memahami Konsep Ini <i class="fa-solid fa-check ml-2"></i></button>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 7: GAME EDUKASI -->
+        <!-- ========================================== -->
+        <section id="section-game" class="section-container">
+            <h2 class="text-3xl font-heading font-bold text-primary mb-2">Misi Detektif Sains</h2>
+            <p class="text-gray-600 mb-6">Kelompokkan benda-benda berikut ke dalam kotak yang tepat (dalam hal penghantaran panas).</p>
+
+            <div class="bg-gradient-to-b from-blue-900 to-blue-800 rounded-xl shadow-xl p-6 text-white max-w-2xl mx-auto relative">
+                
+                <div class="flex justify-between items-center mb-6">
+                    <div class="font-bold text-yellow-300">Skor: <span id="game-score" class="text-2xl">0</span></div>
+                    <div class="text-sm font-semibold bg-white text-blue-900 px-3 py-1 rounded-full">Soal <span id="game-current">1</span>/10</div>
+                </div>
+
+                <!-- Game Area -->
+                <div id="game-area" class="text-center py-8">
+                    <div class="bg-white text-gray-800 rounded-xl w-48 h-48 mx-auto flex flex-col justify-center items-center shadow-lg transform transition-transform mb-8" id="game-card">
+                        <i id="game-icon" class="fa-solid fa-question text-6xl text-gray-400 mb-4"></i>
+                        <h3 id="game-item-name" class="font-bold text-lg px-2 text-center">Nama Benda</h3>
+                        <p id="game-item-detail" class="text-xs text-gray-500 px-2 text-center mt-1">(spesifikasi)</p>
+                    </div>
+                    
+                    <div class="flex justify-center gap-4">
+                        <button onclick="answerGame('konduktor')" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg border-b-4 border-red-700 active:border-b-0 active:translate-y-1 transition-all flex-1 max-w-[150px]">KONDUKTOR</button>
+                        <button onclick="answerGame('isolator')" class="bg-blue-400 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-lg shadow-lg border-b-4 border-blue-600 active:border-b-0 active:translate-y-1 transition-all flex-1 max-w-[150px]">ISOLATOR</button>
+                    </div>
+                </div>
+
+                <!-- Game Over Area -->
+                <div id="game-over-area" class="hidden text-center py-8">
+                    <i class="fa-solid fa-medal text-6xl text-yellow-400 mb-4"></i>
+                    <h3 class="text-2xl font-bold mb-2">Misi Selesai!</h3>
+                    <p class="mb-6">Skor Akhirmu: <span id="game-final-score" class="font-bold text-yellow-300 text-xl">0</span> / 100</p>
+                    <button onclick="initGame()" class="bg-white text-blue-900 hover:bg-blue-50 font-bold py-2 px-6 rounded-lg shadow mr-2">Main Lagi</button>
+                    <button onclick="saveGameAndNext()" class="bg-accent hover:bg-orange-600 text-white font-bold py-2 px-6 rounded-lg shadow">Lanjut Kuis <i class="fa-solid fa-arrow-right"></i></button>
+                </div>
+            </div>
+            
+            <!-- Game Feedback Modal (Overlay inside the game box) -->
+            <div id="game-feedback" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white text-gray-800 p-4 rounded-xl shadow-2xl z-10 hidden w-64 text-center border-4 border-green-500">
+                <i id="feedback-icon" class="fa-solid fa-check-circle text-5xl text-green-500 mb-2"></i>
+                <h4 id="feedback-title" class="font-bold text-lg">Benar!</h4>
+                <p id="feedback-desc" class="text-sm mt-2 text-gray-600">Penjelasan singkat.</p>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 8: KUIS WAYGROUND -->
+        <!-- ========================================== -->
+        <section id="section-kuis" class="section-container">
+            <h2 class="text-3xl font-heading font-bold text-primary mb-2">Kuis Evaluasi (Wayground)</h2>
+            <p class="text-gray-600 mb-6">Uji pemahamanmu secara mandiri melalui platform Wayground.</p>
+
+            <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100 flex flex-col md:flex-row items-center gap-6">
+                <div class="md:w-1/3 flex justify-center">
+                    <div class="w-32 h-32 bg-purple-100 rounded-full flex items-center justify-center">
+                        <i class="fa-solid fa-clipboard-question text-6xl text-purple-600"></i>
+                    </div>
+                </div>
+                <div class="md:w-2/3 space-y-4">
+                    <h3 class="font-bold text-xl text-gray-800">Instruksi Mengerjakan Kuis:</h3>
+                    <ol class="list-decimal list-inside text-sm text-gray-700 space-y-2">
+                        <li>Klik tombol "Buka Kuis Wayground" di bawah ini (akan terbuka di tab baru).</li>
+                        <li>Kerjakan soal-soal kuis dengan teliti.</li>
+                        <li>Setelah selesai, catat skor akhir yang kamu dapatkan.</li>
+                        <li>Kembali ke halaman ini dan masukkan skor tersebut pada kolom yang disediakan.</li>
+                    </ol>
+                    
+                    <a href="https://wayground.com/activity/admin/quiz/6021f3a3d9a55b001c2b40e1/soal-ipa-konduktor-dan-isolator" target="_blank" class="inline-block bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded shadow">
+                        <i class="fa-solid fa-external-link-alt mr-2"></i> Buka Kuis Wayground
+                    </a>
+                    <p class="text-xs text-orange-600 mt-1">*Jika link meminta login admin, minta guru memberikan link akses siswa atau kerjakan bersama di kelas.</p>
+
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <label class="block font-bold text-sm text-gray-800 mb-2">Masukkan Skormu (0-100):</label>
+                        <div class="flex gap-2 max-w-xs">
+                            <input type="number" id="input-skor-kuis" min="0" max="100" class="w-full px-3 py-2 border rounded focus:ring-1 focus:ring-purple-500 outline-none" placeholder="Contoh: 85">
+                            <button onclick="saveKuisScore()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-bold">Simpan</button>
+                        </div>
+                        <p id="status-kuis" class="text-sm mt-2 font-semibold text-gray-500">Status: <span class="text-red-500">Belum Mengerjakan</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-right mt-6">
+                <button onclick="navTo('refleksi')" class="bg-secondary hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg shadow">Lanjut Refleksi <i class="fa-solid fa-arrow-right ml-2"></i></button>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 9: REFLEKSI (AHA MOMENT) -->
+        <!-- ========================================== -->
+        <section id="section-refleksi" class="section-container">
+            <div class="text-center mb-8 relative">
+                <div id="aha-lightbulb" class="inline-block text-gray-300 text-6xl mb-4 transition-colors duration-1000">
+                    <i class="fa-solid fa-lightbulb"></i>
+                </div>
+                <h2 class="text-3xl font-heading font-bold text-accent uppercase tracking-wider">Aha Moment!</h2>
+                <p class="text-gray-600">Hal baru apa yang kamu temukan hari ini?</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100 space-y-4">
+                <div>
+                    <label class="block font-medium text-gray-800 mb-1">1. Apa hal paling menarik yang kamu pelajari hari ini?</label>
+                    <textarea id="ref-q1" rows="2" class="w-full border rounded p-2 focus:ring-1 focus:ring-accent"></textarea>
+                </div>
+                <div>
+                    <label class="block font-medium text-gray-800 mb-1">2. Apa yang awalnya kamu kira benar, tetapi ternyata berbeda setelah melakukan penyelidikan?</label>
+                    <textarea id="ref-q2" rows="2" class="w-full border rounded p-2 focus:ring-1 focus:ring-accent"></textarea>
+                </div>
+                <div>
+                    <label class="block font-medium text-gray-800 mb-1">3. Di mana kamu menemukan penerapan konduktor dan isolator di rumahmu selain alat dapur?</label>
+                    <textarea id="ref-q3" rows="2" class="w-full border rounded p-2 focus:ring-1 focus:ring-accent"></textarea>
+                </div>
+                <div>
+                    <label class="block font-medium text-gray-800 mb-1">4. Apa yang masih membuatmu bingung atau ingin kamu pelajari lebih lanjut?</label>
+                    <textarea id="ref-q4" rows="2" class="w-full border rounded p-2 focus:ring-1 focus:ring-accent"></textarea>
+                </div>
+
+                <button onclick="saveReflection()" class="w-full bg-accent hover:bg-orange-600 text-white font-bold py-3 rounded-lg shadow-lg mt-4 transition-all">
+                    <i class="fa-solid fa-sparkles mr-2"></i> Simpan Refleksi
+                </button>
+            </div>
+            
+            <div class="text-right mt-6">
+                <button onclick="generateRekap(); navTo('rekap')" class="bg-secondary hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg shadow">Lihat Rekap Hasil <i class="fa-solid fa-arrow-right ml-2"></i></button>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 10: REKAP & PENGIRIMAN WA -->
+        <!-- ========================================== -->
+        <section id="section-rekap" class="section-container">
+            <h2 class="text-3xl font-heading font-bold text-primary mb-2">Hebat! Kamu Telah Menjadi Detektif Sains! <i class="fa-solid fa-award text-yellow-400"></i></h2>
+            <p class="text-gray-600 mb-6">Hari ini kamu telah menyelidiki bagaimana bahan menghantarkan panas, membandingkan hasil pengamatan, dan menarik kesimpulan berdasarkan bukti.</p>
+
+            <div class="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8 text-sm text-gray-800 text-center">
+                <p><strong>Tugas Lanjutan:</strong> Bacalah materi berikutnya tentang pemuaian dan temukan satu contoh pemuaian dalam kehidupan sehari-hari.</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100 mb-8">
+                <h3 class="text-xl font-bold border-b pb-2 mb-4">Dashboard Hasil Belajarmu</h3>
+                
+                <div class="grid md:grid-cols-2 gap-4 mb-6">
+                    <div class="bg-gray-50 p-3 rounded border">
+                        <span class="text-xs text-gray-500 block">Identitas</span>
+                        <strong id="rekap-nama">-</strong> (<span id="rekap-kelas">-</span>)
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded border">
+                        <span class="text-xs text-gray-500 block">Status LKPD</span>
+                        <strong id="rekap-lkpd-status">-</strong>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded border flex justify-between items-center">
+                        <div>
+                            <span class="text-xs text-gray-500 block">Skor Game Detektif</span>
+                            <strong id="rekap-game-score">0</strong> / 100
+                        </div>
+                        <i class="fa-solid fa-gamepad text-2xl text-blue-300"></i>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded border flex justify-between items-center">
+                        <div>
+                            <span class="text-xs text-gray-500 block">Skor Kuis Wayground</span>
+                            <strong id="rekap-kuis-score">0</strong> / 100
+                        </div>
+                        <i class="fa-solid fa-star text-2xl text-yellow-400"></i>
+                    </div>
+                </div>
+
+                <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-r text-sm text-green-800 mb-6">
+                    <i class="fa-solid fa-info-circle mr-1"></i> Data pembelajaranmu saat ini tersimpan di memori browsermu. Untuk melaporkan ke guru, silakan kirim melalui WhatsApp menggunakan tombol di bawah ini.
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-4 justify-center">
+                    <button onclick="navTo('lkpd')" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-lg shadow transition-all">
+                        <i class="fa-solid fa-eye mr-2"></i> Periksa Ulang LKPD
+                    </button>
+                    <button onclick="sendToWhatsApp()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all transform hover:scale-105">
+                        <i class="fa-brands fa-whatsapp text-xl mr-2"></i> Kirim Hasil ke Guru
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Global Toast / Modal elements -->
+    <div id="toast">Notifikasi</div>
+
+    <script>
+        // State Management
+        let studentData = {
+            nama: '', kelas: '', absen: '', tanggal: '',
+            stimulasi: { q1:'', q2:'', q3:'', q4:'' },
+            modePraktikum: 'nyata',
+            lkpdData: [
+                { jenis: 'Sendok Logam', bahan: 'Besi/Aluminium', meleleh: 'Ya', waktu: '-', sifat: 'Konduktor' },
+                { jenis: 'Penggaris Plastik', bahan: 'Plastik', meleleh: 'Tidak', waktu: '> 3 menit', sifat: 'Isolator' },
+                { jenis: 'Sumpit', bahan: 'Kayu/Bambu', meleleh: 'Tidak', waktu: '> 3 menit', sifat: 'Isolator' },
+            ],
+            lkpdDiskusi: { q1:'', q2:'', q3:'', q4:'', kesimpulan:'' },
+            verifikasi: { q1:'', q2:'' },
+            gameScore: 0,
+            kuisScore: 0, kuisStatus: 'Belum Mengerjakan',
+            refleksi: { q1:'', q2:'', q3:'', q4:'' }
+        };
+
+        const TEACHER_WA_NUMBER = "6282372966011";
+
+        // Navigation Logic
+        const sections = ['home', 'tujuan', 'stimulasi', 'materi', 'praktikum', 'lkpd', 'verifikasi', 'game', 'kuis', 'refleksi', 'rekap'];
+        
+        function navTo(sectionId) {
+            // Check if identity is filled when trying to access other sections
+            if (sectionId !== 'home' && !studentData.nama) {
+                showToast("Silakan isi identitas diri terlebih dahulu!");
+                navTo('home');
+                return;
+            }
+
+            // Hide all, show target
+            document.querySelectorAll('.section-container').forEach(el => el.classList.remove('active'));
+            document.getElementById(`section-${sectionId}`).classList.add('active');
+            
+            // Update nav buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active', 'border-l-4', 'border-yellow-400', 'bg-blue-800'));
+            // Find appropriate nav button and style it
+            const links = document.querySelectorAll('.nav-btn');
+            links.forEach(link => {
+                if(link.getAttribute('onclick').includes(sectionId)) {
+                    link.classList.add('active', 'border-l-4', 'border-yellow-400', 'bg-blue-800');
+                }
+            });
+
+            // Update Progress
+            updateProgress(sectionId);
+            
+            // Mobile sidebar close
+            if(window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('-translate-x-full');
+            }
+
+            // Scroll to top
+            window.scrollTo(0, 0);
+
+            // Specific section initializers
+            if(sectionId === 'lkpd') renderLkpdTable();
+            if(sectionId === 'game' && !gameInitialized) initGame();
+        }
+
+        function updateProgress(currentSection) {
+            let index = sections.indexOf(currentSection);
+            let percent = Math.round((index / (sections.length - 1)) * 100);
+            if(percent < 0) percent = 0;
+            
+            document.getElementById('progress-bar').style.width = `${percent}%`;
+            document.getElementById('progress-text').innerText = `${percent}%`;
+        }
+
+        // Section 0: Identity
+        function startLearning() {
+            const nama = document.getElementById('input-nama').value.trim();
+            const kelas = document.getElementById('input-kelas').value.trim();
+            const absen = document.getElementById('input-absen').value;
+            const tgl = document.getElementById('input-tanggal').value;
+
+            if(!nama || !kelas || !absen || !tgl) {
+                showToast("Mohon lengkapi semua data!"); return;
+            }
+
+            studentData.nama = nama; studentData.kelas = kelas;
+            studentData.absen = absen; studentData.tanggal = tgl;
+            
+            // Update UI
+            document.getElementById('user-badge').classList.remove('hidden');
+            document.getElementById('badge-initial').innerText = nama.charAt(0).toUpperCase();
+            document.getElementById('badge-name').innerText = nama;
+            document.getElementById('badge-class').innerText = `Kelas ${kelas}`;
+            
+            // Generate Checklist
+            const checkContainer = document.getElementById('checklist-tujuan');
+            checkContainer.innerHTML = `
+                <label class="flex items-center gap-2 text-gray-700 cursor-pointer"><input type="checkbox" class="w-4 h-4 text-secondary rounded"> Saya dapat menjelaskan pengertian konduktor dan isolator.</label>
+                <label class="flex items-center gap-2 text-gray-700 cursor-pointer"><input type="checkbox" class="w-4 h-4 text-secondary rounded"> Saya dapat membedakan sifat bahan.</label>
+                <label class="flex items-center gap-2 text-gray-700 cursor-pointer"><input type="checkbox" class="w-4 h-4 text-secondary rounded"> Saya dapat melakukan pengamatan dan mencatat hasil.</label>
+                <label class="flex items-center gap-2 text-gray-700 cursor-pointer"><input type="checkbox" class="w-4 h-4 text-secondary rounded"> Saya dapat mengelompokkan benda.</label>
+                <label class="flex items-center gap-2 text-gray-700 cursor-pointer"><input type="checkbox" class="w-4 h-4 text-secondary rounded"> Saya dapat menyimpulkan hasil penyelidikan.</label>
+            `;
+
+            navTo('tujuan');
+            showToast(`Selamat datang, ${nama}!`);
+        }
+
+        function logout() {
+            if(confirm("Yakin ingin mereset data dan mengulang dari awal?")) {
+                studentData = {nama:''}; // reset
+                document.getElementById('form-identitas').reset();
+                document.getElementById('user-badge').classList.add('hidden');
+                navTo('home');
+            }
+        }
+
+        // Utils
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg; t.className = "show";
+            setTimeout(() => t.className = t.className.replace("show", ""), 3000);
+        }
+
+        // Section 2: Stimulasi
+        function showHint(id) {
+            document.getElementById(`hint-${id}`).classList.toggle('hidden');
+        }
+        function saveStimulasi() {
+            studentData.stimulasi.q1 = document.getElementById('q-stim-1').value;
+            studentData.stimulasi.q2 = document.getElementById('q-stim-2').value;
+            studentData.stimulasi.q3 = document.getElementById('q-stim-3').value;
+            studentData.stimulasi.q4 = document.getElementById('q-stim-4').value;
+            showToast("Jawaban stimulasi disimpan!");
+        }
+
+        // Section 3: Materi
+        const objectData = {
+            'panci': { title: 'Panci Logam', desc: 'Terbuat dari logam (seperti aluminium atau baja) agar cepat menghantarkan panas dari api ke makanan. Merupakan Konduktor yang baik.'},
+            'gagang': { title: 'Gagang Panci', desc: 'Terbuat dari plastik tahan panas (ebonit) atau kayu. Berfungsi menghambat panas agar tangan kita tidak melepuh saat memegang panci. Merupakan Isolator.'},
+            'kabel': { title: 'Kabel Listrik', desc: 'Bagian dalamnya terbuat dari kawat tembaga (konduktor listrik & panas), sedangkan bagian luarnya dibungkus karet/plastik pelindung (isolator) agar aman dipegang.'},
+            'sendok': { title: 'Sendok Logam', desc: 'Terbuat dari stainless steel. Jika dicelupkan ke teh panas, ujung sendok yang dipegang akan ikut terasa panas karena ia menghantarkan panas (Konduktor).'}
+        };
+        
+        function showObjectInfo(obj) {
+            const box = document.getElementById('object-info-box');
+            document.getElementById('obj-title').innerText = objectData[obj].title;
+            document.getElementById('obj-desc').innerText = objectData[obj].desc;
+            box.classList.remove('hidden');
+        }
+
+        // Animasi Rambat Panas
+        let animTimeout;
+        function playHeatAnimation() {
+            resetHeatAnimation();
+            setTimeout(() => {
+                document.getElementById('anim-metal').style.transition = "width 2s linear";
+                document.getElementById('anim-wood').style.transition = "width 10s linear";
+                document.getElementById('anim-metal').style.width = "100%";
+                document.getElementById('anim-wood').style.width = "15%";
+            }, 100);
+        }
+        function pauseHeatAnimation() {
+            // Simplistic pause by grabbing computed style and forcing it
+            const metal = document.getElementById('anim-metal');
+            const wood = document.getElementById('anim-wood');
+            metal.style.width = window.getComputedStyle(metal).width;
+            wood.style.width = window.getComputedStyle(wood).width;
+            metal.style.transition = "none";
+            wood.style.transition = "none";
+        }
+        function resetHeatAnimation() {
+            const metal = document.getElementById('anim-metal');
+            const wood = document.getElementById('anim-wood');
+            metal.style.transition = "none";
+            wood.style.transition = "none";
+            metal.style.width = "0%";
+            wood.style.width = "0%";
+        }
+
+        // Mini Quiz
+        const miniQuiz = [
+            {q: "Bahan yang mudah menghantarkan panas disebut?", opts: ["Isolator", "Konduktor", "Radiator"], a: 1},
+            {q: "Manakah yang merupakan isolator panas?", opts: ["Besi", "Aluminium", "Kayu Kering"], a: 2}
+        ];
+        function renderMiniQuiz() {
+            let html = '';
+            miniQuiz.forEach((mq, idx) => {
+                html += `<div class="mb-4"><p class="font-semibold text-gray-800 mb-2">${idx+1}. ${mq.q}</p><div class="flex gap-2">`;
+                mq.opts.forEach((opt, oIdx) => {
+                    html += `<button onclick="checkMiniQuiz(this, ${idx}, ${oIdx})" class="px-3 py-1 border rounded text-sm hover:bg-blue-50 transition-colors">${opt}</button>`;
+                });
+                html += `</div><div id="mq-res-${idx}" class="text-xs mt-1 hidden"></div></div>`;
+            });
+            document.getElementById('mini-quiz-container').innerHTML = html;
+        }
+        function checkMiniQuiz(btn, qIdx, oIdx) {
+            const res = document.getElementById(`mq-res-${qIdx}`);
+            res.classList.remove('hidden');
+            if(oIdx === miniQuiz[qIdx].a) {
+                res.innerHTML = '<span class="text-green-600 font-bold"><i class="fa-solid fa-check"></i> Tepat sekali!</span>';
+                btn.classList.add('bg-green-100', 'border-green-500');
+            } else {
+                res.innerHTML = '<span class="text-red-500"><i class="fa-solid fa-times"></i> Kurang tepat, coba lagi.</span>';
+                btn.classList.add('bg-red-100', 'border-red-500');
+            }
+        }
+        renderMiniQuiz();
+
+        // Section 4: Praktikum & Simulasi
+        function setPracticumMode(mode) {
+            studentData.modePraktikum = mode;
+            if(mode === 'nyata') {
+                document.getElementById('btn-mode-nyata').className = "px-6 py-2 rounded-md font-bold text-gray-700 bg-white shadow-sm transition-all";
+                document.getElementById('btn-mode-simulasi').className = "px-6 py-2 rounded-md font-bold text-gray-500 hover:text-gray-700 transition-all";
+                document.getElementById('content-nyata').classList.remove('hidden');
+                document.getElementById('content-simulasi').classList.add('hidden');
+            } else {
+                document.getElementById('btn-mode-simulasi').className = "px-6 py-2 rounded-md font-bold text-gray-700 bg-white shadow-sm transition-all";
+                document.getElementById('btn-mode-nyata').className = "px-6 py-2 rounded-md font-bold text-gray-500 hover:text-gray-700 transition-all";
+                document.getElementById('content-simulasi').classList.remove('hidden');
+                document.getElementById('content-nyata').classList.add('hidden');
+            }
+        }
+
+        let simTimerInterval;
+        let simTime = 0;
+        function startSimulation() {
+            clearInterval(simTimerInterval);
+            resetSimulationVisuals();
+            
+            const material = document.getElementById('sim-material').value;
+            const objEl = document.getElementById('sim-object');
+            const heatLayer = document.getElementById('sim-heat-layer');
+            const margarin = document.getElementById('sim-margarin');
+            const resBox = document.getElementById('sim-result');
+            
+            document.getElementById('sim-water').style.display = 'block';
+            document.getElementById('sim-heat-icon').style.display = 'inline-block';
+            
+            // Adjust visual based on material
+            if(material === 'logam') objEl.style.backgroundColor = '#9ca3af'; // gray
+            if(material === 'plastik') objEl.style.backgroundColor = '#fca5a5'; // pinkish plastic
+            if(material === 'kayu') objEl.style.backgroundColor = '#d97706'; // brown wood
+            
+            heatLayer.style.transition = 'width 10s linear'; // logical default
+            margarin.style.transition = 'transform 2s, opacity 2s';
+
+            simTime = 0;
+            simTimerInterval = setInterval(() => {
+                simTime++;
+                let mins = Math.floor(simTime / 60);
+                let secs = simTime % 60;
+                document.getElementById('sim-timer').innerText = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+                
+                // Logic based on material
+                if(material === 'logam') {
+                    heatLayer.style.width = Math.min((simTime / 10) * 100, 100) + '%';
+                    if(simTime === 10) {
+                        margarin.style.transform = 'translateY(20px) scale(1.5)';
+                        margarin.style.opacity = '0.5';
+                        resBox.innerHTML = '<span class="text-green-600">Panas cepat merambat! Margarin meleleh pada detik ke-10. (Konduktor)</span>';
+                        resBox.classList.remove('hidden');
+                        clearInterval(simTimerInterval);
+                    }
+                } else if(material === 'plastik' || material === 'kayu') {
+                    // Heat barely travels
+                    heatLayer.style.width = Math.min((simTime / 180) * 20, 20) + '%'; 
+                    // Accelerate simulation time for non-conductors
+                    if(simTime % 2 === 0) simTime += 10; 
+                    
+                    if(simTime >= 180) { // 3 minutes simulated
+                        resBox.innerHTML = `<span class="text-blue-600">Panas terhambat. Margarin TIDAK meleleh setelah 3 menit. (Isolator)</span>`;
+                        resBox.classList.remove('hidden');
+                        document.getElementById('sim-timer').innerText = "03:00";
+                        clearInterval(simTimerInterval);
+                    }
+                }
+            }, 1000); // 1 real second per sim tick initially
+        }
+        
+        function resetSimulationVisuals() {
+            document.getElementById('sim-heat-layer').style.transition = 'none';
+            document.getElementById('sim-heat-layer').style.width = '0%';
+            const margarin = document.getElementById('sim-margarin');
+            margarin.style.transition = 'none';
+            margarin.style.transform = 'translateY(0) scale(1)';
+            margarin.style.opacity = '1';
+            document.getElementById('sim-water').style.display = 'none';
+            document.getElementById('sim-heat-icon').style.display = 'none';
+            document.getElementById('sim-result').classList.add('hidden');
+        }
+
+        function resetSimulation() {
+            clearInterval(simTimerInterval);
+            simTime = 0;
+            document.getElementById('sim-timer').innerText = "00:00";
+            resetSimulationVisuals();
+        }
+
+
+        // Section 5: LKPD
+        function renderLkpdTable() {
+            // Update Headers
+            document.getElementById('lkpd-nama').innerText = studentData.nama;
+            document.getElementById('lkpd-kelas').innerText = studentData.kelas;
+            document.getElementById('lkpd-absen').innerText = studentData.absen;
+            document.getElementById('lkpd-tanggal').innerText = studentData.tanggal;
+            document.getElementById('lkpd-jenis').innerText = studentData.modePraktikum === 'nyata' ? 'Praktikum Nyata' : 'Simulasi Virtual';
+
+            const tbody = document.getElementById('lkpd-table-body');
+            tbody.innerHTML = '';
+            studentData.lkpdData.forEach((row, index) => {
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="border border-gray-400 p-2 text-center">${index + 1}</td>
+                    <td class="border border-gray-400 p-2"><input type="text" class="w-full bg-transparent outline-none" value="${row.jenis}" onchange="updateLkpdData(${index}, 'jenis', this.value)"></td>
+                    <td class="border border-gray-400 p-2"><input type="text" class="w-full bg-transparent outline-none" value="${row.bahan}" onchange="updateLkpdData(${index}, 'bahan', this.value)"></td>
+                    <td class="border border-gray-400 p-2">
+                        <select class="w-full bg-transparent outline-none" onchange="updateLkpdData(${index}, 'meleleh', this.value)">
+                            <option value="Ya" ${row.meleleh === 'Ya' ? 'selected' : ''}>Ya</option>
+                            <option value="Tidak" ${row.meleleh === 'Tidak' ? 'selected' : ''}>Tidak</option>
+                            <option value="-" ${row.meleleh === '-' ? 'selected' : ''}>-</option>
+                        </select>
+                    </td>
+                    <td class="border border-gray-400 p-2"><input type="text" class="w-full bg-transparent outline-none" value="${row.waktu}" onchange="updateLkpdData(${index}, 'waktu', this.value)"></td>
+                    <td class="border border-gray-400 p-2"><input type="text" class="w-full bg-transparent outline-none" value="${row.sifat}" onchange="updateLkpdData(${index}, 'sifat', this.value)" placeholder="Konduktor/Isolator"></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateLkpdData(index, field, value) {
+            studentData.lkpdData[index][field] = value;
+        }
+
+        function addLkpdRow() {
+            studentData.lkpdData.push({ jenis: '', bahan: '', meleleh: '-', waktu: '', sifat: '' });
+            renderLkpdTable();
+        }
+
+        function saveLKPD() {
+            studentData.lkpdDiskusi.q1 = document.getElementById('lkpd-q1').value;
+            studentData.lkpdDiskusi.q2 = document.getElementById('lkpd-q2').value;
+            studentData.lkpdDiskusi.q3 = document.getElementById('lkpd-q3').value;
+            studentData.lkpdDiskusi.q4 = document.getElementById('lkpd-q4').value;
+            studentData.lkpdDiskusi.kesimpulan = document.getElementById('lkpd-kesimpulan').value;
+            showToast("LKPD berhasil disimpan!");
+        }
+
+        // Section 7: Game
+        const gameItems = [
+            { name: "Panci Aluminium", detail: "Badan Panci", type: "konduktor", icon: "fa-fire-burner" },
+            { name: "Gagang Panci", detail: "Plastik/Kayu", type: "isolator", icon: "fa-grip" },
+            { name: "Sendok Makan", detail: "Stainless Steel", type: "konduktor", icon: "fa-spoon" },
+            { name: "Kayu Kering", detail: "Ranting", type: "isolator", icon: "fa-tree" },
+            { name: "Kawat Tembaga", detail: "Isi Dalam Kabel", type: "konduktor", icon: "fa-plug" },
+            { name: "Karet Gelang", detail: "Bahan Karet", type: "isolator", icon: "fa-circle-notch" },
+            { name: "Paku Besi", detail: "Bahan Besi", type: "konduktor", icon: "fa-hammer" },
+            { name: "Sumpit Bambu", detail: "Bahan Bambu", type: "isolator", icon: "fa-utensils" },
+            { name: "Uang Koin", detail: "Logam Kuningan", type: "konduktor", icon: "fa-coins" },
+            { name: "Kain Lap", detail: "Kain Katun", type: "isolator", icon: "fa-rug" }
+        ];
+        
+        let gameInitialized = false;
+        let currentGameIndex = 0;
+        let currentScore = 0;
+        let gameOrder = [];
+
+        function initGame() {
+            gameInitialized = true;
+            currentGameIndex = 0;
+            currentScore = 0;
+            document.getElementById('game-score').innerText = '0';
+            document.getElementById('game-area').classList.remove('hidden');
+            document.getElementById('game-over-area').classList.add('hidden');
+            
+            // Shuffle
+            gameOrder = [...gameItems].sort(() => Math.random() - 0.5);
+            loadGameItem();
+        }
+
+        function loadGameItem() {
+            if(currentGameIndex >= gameOrder.length) {
+                endGame();
+                return;
+            }
+            document.getElementById('game-current').innerText = currentGameIndex + 1;
+            const item = gameOrder[currentGameIndex];
+            
+            const card = document.getElementById('game-card');
+            card.classList.remove('scale-95', 'opacity-50');
+            
+            document.getElementById('game-icon').className = `fa-solid ${item.icon} text-6xl text-gray-700 mb-4`;
+            document.getElementById('game-item-name').innerText = item.name;
+            document.getElementById('game-item-detail').innerText = `(${item.detail})`;
+        }
+
+        function answerGame(answer) {
+            const item = gameOrder[currentGameIndex];
+            const isCorrect = (answer === item.type);
+            
+            if(isCorrect) {
+                currentScore += 10;
+                document.getElementById('game-score').innerText = currentScore;
+                showGameFeedback(true, "Tepat Sekali!", `${item.name} adalah ${item.type.toUpperCase()} panas.`);
+            } else {
+                showGameFeedback(false, "Kurang Tepat", `${item.name} seharusnya adalah ${item.type.toUpperCase()}.`);
+            }
+
+            const card = document.getElementById('game-card');
+            card.classList.add('scale-95', 'opacity-50');
+
+            setTimeout(() => {
+                currentGameIndex++;
+                loadGameItem();
+            }, 1500);
+        }
+
+        function showGameFeedback(isCorrect, title, desc) {
+            const fb = document.getElementById('game-feedback');
+            const icon = document.getElementById('feedback-icon');
+            
+            fb.classList.remove('hidden', 'border-green-500', 'border-red-500');
+            fb.classList.add(isCorrect ? 'border-green-500' : 'border-red-500');
+            
+            icon.className = `fa-solid ${isCorrect ? 'fa-check-circle text-green-500' : 'fa-times-circle text-red-500'} text-5xl mb-2`;
+            document.getElementById('feedback-title').innerText = title;
+            document.getElementById('feedback-desc').innerText = desc;
+            
+            fb.classList.remove('hidden');
+            setTimeout(() => fb.classList.add('hidden'), 1200);
+        }
+
+        function endGame() {
+            document.getElementById('game-area').classList.add('hidden');
+            document.getElementById('game-over-area').classList.remove('hidden');
+            document.getElementById('game-final-score').innerText = currentScore;
+            studentData.gameScore = currentScore;
+        }
+
+        function saveGameAndNext() {
+            studentData.gameScore = currentScore;
+            navTo('kuis');
+        }
+
+        // Section 8: Kuis
+        function saveKuisScore() {
+            const skor = document.getElementById('input-skor-kuis').value;
+            if(skor !== "" && skor >= 0 && skor <= 100) {
+                studentData.kuisScore = skor;
+                studentData.kuisStatus = 'Selesai';
+                document.getElementById('status-kuis').innerHTML = 'Status: <span class="text-green-600 font-bold"><i class="fa-solid fa-check"></i> Disimpan</span>';
+                showToast("Skor Kuis Disimpan!");
+            } else {
+                showToast("Masukkan skor yang valid (0-100).");
+            }
+        }
+
+        // Section 9: Refleksi
+        function saveReflection() {
+            studentData.refleksi.q1 = document.getElementById('ref-q1').value;
+            studentData.refleksi.q2 = document.getElementById('ref-q2').value;
+            studentData.refleksi.q3 = document.getElementById('ref-q3').value;
+            studentData.refleksi.q4 = document.getElementById('ref-q4').value;
+            
+            const lightbulb = document.getElementById('aha-lightbulb');
+            lightbulb.classList.remove('text-gray-300');
+            lightbulb.classList.add('text-yellow-400');
+            
+            showToast("Refleksi berhasil disimpan! AHA!");
+        }
+
+        // Section 10: Rekap & Kirim
+        function generateRekap() {
+            document.getElementById('rekap-nama').innerText = studentData.nama || 'Belum diisi';
+            document.getElementById('rekap-kelas').innerText = studentData.kelas || '-';
+            
+            const lkpdDone = studentData.lkpdDiskusi.kesimpulan.trim() !== '';
+            document.getElementById('rekap-lkpd-status').innerHTML = lkpdDone ? '<span class="text-green-600 font-bold"><i class="fa-solid fa-check"></i> Terisi</span>' : '<span class="text-red-500 font-bold">Belum Lengkap</span>';
+            
+            document.getElementById('rekap-game-score').innerText = studentData.gameScore;
+            document.getElementById('rekap-kuis-score').innerText = studentData.kuisScore;
+        }
+
+        function sendToWhatsApp() {
+            if(!studentData.nama) {
+                showToast("Data identitas belum lengkap!"); return;
+            }
+
+            // Construct Message
+            let msg = `*LAPORAN HASIL BELAJAR IPA*%0A`;
+            msg += `Sekolah: SMP Negeri 58 Palembang%0A`;
+            msg += `Guru: Herdi, S.Pd., Gr.%0A`;
+            msg += `Materi: Konduktor dan Isolator%0A%0A`;
+            
+            msg += `*IDENTITAS SISWA*%0A`;
+            msg += `- Nama: ${studentData.nama}%0A`;
+            msg += `- Kelas: ${studentData.kelas}%0A`;
+            msg += `- No Absen: ${studentData.absen}%0A`;
+            msg += `- Tanggal: ${studentData.tanggal}%0A%0A`;
+            
+            msg += `*HASIL KEGIATAN*%0A`;
+            msg += `- Jenis Praktikum: ${studentData.modePraktikum === 'nyata' ? 'Praktikum Nyata' : 'Simulasi Virtual'}%0A`;
+            msg += `- Kesimpulan LKPD: ${studentData.lkpdDiskusi.kesimpulan ? studentData.lkpdDiskusi.kesimpulan.substring(0, 50) + '...' : 'Belum diisi'}%0A`;
+            msg += `- Skor Game Detektif: ${studentData.gameScore}/100%0A`;
+            msg += `- Skor Kuis Wayground: ${studentData.kuisScore}/100 (${studentData.kuisStatus})%0A%0A`;
+            
+            msg += `*REFLEKSI (AHA Moment)*%0A`;
+            msg += `- Hal menarik: ${studentData.refleksi.q1 ? studentData.refleksi.q1.substring(0, 50) + '...' : 'Belum diisi'}%0A%0A`;
+            
+            msg += `_Laporan ini dikirim secara otomatis dari Laboratorium IPA Digital._`;
+
+            // Open WA
+            const url = `https://wa.me/${TEACHER_WA_NUMBER}?text=${msg}`;
+            window.open(url, '_blank');
+        }
+
+        // Event Listeners for Mobile Menu
+        document.getElementById('mobile-menu-btn').addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar');
+            const navLinks = document.getElementById('nav-links');
+            if (navLinks.classList.contains('hidden')) {
+                navLinks.classList.remove('hidden');
+                sidebar.classList.remove('-translate-x-full');
+            } else {
+                navLinks.classList.add('hidden');
+            }
+        });
+        
+        // Handle window resize to reset mobile menu
+        window.addEventListener('resize', () => {
+            if(window.innerWidth >= 768) {
+                document.getElementById('nav-links').classList.remove('hidden');
+            } else {
+                document.getElementById('nav-links').classList.add('hidden');
+            }
+        });
+
+    </script>
+</body>
+</html>
